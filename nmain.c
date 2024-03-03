@@ -28,26 +28,36 @@
 
 #include <xc.h>
 #define _XTAL_FREQ 8000000
-#define DISABLE_PWM_SERVICE()               (CCP1CON = 0x0)
+#define DISABLE_PWM_SERVICE()               (CCP1CON            = 0x0)
 #define ENABLE_DIGITAL_IO_PINS()            (ANSEL = 0X0)
-#define GPIF_INT_INTERRUPT_FLAG_CLEAR()     (INTCONbits.GPIF = 0)
-#define TMR2_OFF()                          (T2CONbits.T2ON  = 0)
-#define TMR2_ON()                           (T2CONbits.T2ON  = 1)
+#define GPIF_INT_INTERRUPT_FLAG_CLEAR()     (INTCONbits.GPIF    = 0)
+#define TMR2_OFF()                          (T2CONbits.T2ON     = 0)
+#define TMR2_ON()                           (T2CONbits.T2ON     = 1)
 #define SET_PRESCALER_1()                   (T2CON = 0x0)
-#define ENABLE_CCP1_OUTPUT_DRIVE()          (TRISAbits.TRISIO2 = 0)
-#define DISABLE_CCP1_OUTPUT_DRIVE()         (TRISAbits.TRISIO2 = 1)
-#define SEND_LOW_CLOCK_PULSE()              (GPIObits.GP2 = 0)
-#define LED_ON()                            (GPIObits.GP5 = 1)
-#define LED_OFF()                           (GPIObits.GP5 = 0)
+#define ENABLE_CCP1_OUTPUT_DRIVE()          (TRISAbits.TRISIO2  = 0)
+#define DISABLE_CCP1_OUTPUT_DRIVE()         (TRISAbits.TRISIO2  = 1)
+#define SEND_LOW_CLOCK_PULSE()              (GPIObits.GP2       = 0)
+#define LED_ON()                            (GPIObits.GP5       = 1)
+#define LED_OFF()                           (GPIObits.GP5       = 0)
+#define SET_GPIO0_LOW()                     (GPIObits.GP0       = 0)
+#define SET_GPIO1_LOW()                     (GPIObits.GP1       = 0)
+#define SET_GPIO4_LOW()                     (GPIObits.GP4       = 0)
+#define SET_GPIO5_LOW()                     (GPIObits.GP5       = 0)
+#define SET_OPTION_REG()                    (OPTION_REG         = 0x80)
+#define SET_INTCON()                        (INTCON             = 0xC8)
+#define SET_PR2()                           (PR2                = 0xC7)
+#define SET_CCP1CON()                       (CCP1CON            = 0xC)
+#define SET_CCPR1L()                        (CCPR1L             = 0x1E)
+#define SET_PIR1()                          (PIR1               = 0x0)
 
-#define MASTER_LOW()                        (GPIObits.GP4 = 0x0)
-#define MASTER_HIGH()                       (GPIObits.GP4 = 0x1)
-#define RELEASE_BUS()                       (TRISAbits.TRISIO4 = 0x1)
-#define MASTER_OUT()                        (TRISAbits.TRISIO4 = 0x0)
+#define MASTER_LOW()                        (GPIObits.GP4       = 0x0)
+#define MASTER_HIGH()                       (GPIObits.GP4       = 0x1)
+#define RELEASE_BUS()                       (TRISAbits.TRISIO4  = 0x1)
+#define MASTER_OUT()                        (TRISAbits.TRISIO4  = 0x0)
 #define MASTER_READ_BIT                      GPIObits.GP4
 
-#define TMR1_CLEAR_FLAG_INT()               (PIR1bits.TMR1IF  = 0x0)
-#define ENABLE_TMR1_INT()                   (PIE1bits.TMR1IE  = 0x1)
+#define TMR1_CLEAR_FLAG_INT()               (PIR1bits.TMR1IF    = 0x0)
+#define ENABLE_TMR1_INT()                   (PIE1bits.TMR1IE    = 0x1)
 
 #define LED_Toggle()             do { GPIObits.GP5 = ~GPIObits.GP5; } while(0)
 
@@ -60,8 +70,8 @@
                                                                                 //#define WRITE_LOW_DELAY()        do { for(int i=0;i<180; i++); } while(0) /* delay for  90 us */
                                                                                 //#define DELAY_51us()             do { for(int i=0;i<102; i++); } while(0) /* delay for  51 us */
 
-#define WAIT_FOR_NEW_PWM_CYCLE() do { while(PIR1bits.TMR2IF != 1); } while(0)
-#define DS18B20_BUSY()           do { while(GPIObits.GP4 != 1); } while(0)
+#define WAIT_FOR_NEW_PWM_CYCLE() do { while(PIR1bits.TMR2IF != 1);  } while(0)
+#define DS18B20_BUSY()           do { while(GPIObits.GP4    != 1);  } while(0)
 
                                                                                 /* Calculate the delay, ex. 60.000ns/500ns = 120 cycles, so 120 cycles of 500ns -> 60us */
 
@@ -186,18 +196,18 @@ void SYSTEM_Initialize(){
     TRISA = 0xC;                                                                /* 00001100 GP0,GP1,GP4,GP5 as OUTPUT, GP2,GP3 as INPUT
                                                                                    initially you need to disable output for PWM on GP2
                                                                                    as per documentation  */
-    GPIObits.GP0 = 0x0;                                                         /* make GP0 output low */
-    GPIObits.GP1 = 0x0;                                                         /* make GP1 output low */
-    GPIObits.GP4 = 0x0;                                                         /* make GP4 output low */
-    GPIObits.GP5 = 0x0;                                                         /* make GP5 output low */
+    SET_GPIO0_LOW();                                                            /* make GP0 output low */
+    SET_GPIO1_LOW();                                                            /* make GP1 output low */
+    SET_GPIO4_LOW();                                                            /* make GP4 output low */
+    SET_GPIO5_LOW();                                                            /* make GP5 output low */
 
-    OPTION_REG   = 0x80;                                                        /* 10000000, 0x80
+    SET_OPTION_REG();                                                           /* 10000000, 0x80
                                                                                  * GPIO pull-ups disable 1,
                                                                                  * INTEDG on rising      0,
                                                                                  * TOSC FOSC/4 TOSE      0,
                                                                                  * PSA                   0,
                                                                                  * PS                    000 1:2 */
-    INTCON = 0xC8;                                                              /* 11001000  0xC8
+    SET_INTCON();                                                               /* 11001000  0xC8
                                                                                  * GIE  1 Global Interrupt Enable bit
                                                                                  * PEIE 1 Enables all unmasked interrupts
                                                                                  * TOIE 0 Timer0 Overflow Interrupt Enable bit
@@ -208,10 +218,10 @@ void SYSTEM_Initialize(){
                                                                                  * GPIF 0 GPIO Change Interrupt Flag bit */
     LED_ON();                                                                   /* Led ON */
     DISABLE_CCP1_OUTPUT_DRIVE();
-    PR2     = 0xC7;                                                             /* Load value 199 decimal for PWM freq 10KHz 0xC7  */
-    CCP1CON = 0xC;                                                              /* 00001100 load duty cycle 15% DC1B<1:0> set to 0 */
-    CCPR1L  = 0x1E;                                                             /* 00011110 load value on CCPR1L for DC 15% 0x1E   */
-    PIR1    = 0x0;                                                              /* Clear interrupt flag TMR2IF, TMR2 to PR2 Match
+    SET_PR2();                                                                  /* Load value 199 decimal for PWM freq 10KHz 0xC7  */
+    SET_CCP1CON();                                                              /* 00001100 load duty cycle 15% DC1B<1:0> set to 0 */
+    SET_CCPR1L();                                                               /* 00011110 load value on CCPR1L for DC 15% 0x1E   */
+    SET_PIR1();                                                                 /* Clear interrupt flag TMR2IF, TMR2 to PR2 Match
                                                                                  * Interrupt Flag bit(1) */
     SET_PRESCALER_1();                                                          /* Set prescaler to 1:1 */
     TMR2_ON();                                                                  /* TMR2 ON */
@@ -221,7 +231,7 @@ void SYSTEM_Initialize(){
     ENABLE_CCP1_OUTPUT_DRIVE();                                                 /* Enable the CCP1 pin output driver by clearing
                                                                                  * GP2 P1A bit and make it as output */
    
-    /* Initialise DS18B20 */
+    /* INITIALISE DS18B20 */
     sendReset();                                                                /* Send Reset plus the Presence to start communicating with DS18B20 */
     wCommand(DS18B20_SKIP);                                                     /* Send the SKIP command we are addressing only one sensor */
     wCommand(DS18B20_READ_SCRATCHPAD);                                          /* start reading the first 5 bytes from scratchpad */

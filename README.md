@@ -19,3 +19,6 @@ Temperature and duty cycle
 * 50°C - 54°C duty cycle  75%
 * 55°C - 59°C duty cycle  90%
 * 60°C -     duty cycle 100%
+
+Pic is set with Internal Oscillator Frequency Select (8 MHz)
+command cycle at 500 nano seconds.
