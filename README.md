@@ -1,8 +1,15 @@
-Fan control with Microchip PIC12F615 and 1-wire BUS sensor Dallas DS18B20.
+Fan control with Microchip PIC12F615, 1-wire BUS sensor Dallas DS18B20,
+and n-channel mosfet IRLR/U2905PbF.
 
 This is a Microchip PIC12F615 with PWM at 10 Khz acting on various duty cycles,
 0%, 15%, 30%, 45%, 60%, 75%, 90% and 100% depending on the temperature reading 
 from 1-wire BUS Dallas DS18B20 temperature sensor.
+
+Logic Level N-CHANNEL MOSFET IRLR/U2905PbF is being used for the PWM gate pulse.
+Continuous Drain Current, VGS @10V 42A MAX rating.
+Gate-to-Source Voltage +-16V
+Gate Threshold Voltage MIN 1V MAX 2V, VDS = VGS , ID = 250µA 
+RG = 3.4Ω, VGS = 5.0V
 
 * CONFIGURATION OF GPIO PINS
 ------------------------------
