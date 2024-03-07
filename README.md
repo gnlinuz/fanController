@@ -22,3 +22,7 @@ Temperature and duty cycle
 
 Pic is set with Internal Oscillator Frequency Select (8 MHz)
 command cycle at 500 nano seconds.
+
+The nmain.c file was created with MPLAB IDE v6.20, and the compiler used XC8-v2.46.
+The HEX file can be used directly to programme the 12F615.
+Programmer hardware used PICKIT 3.
