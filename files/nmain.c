@@ -5,7 +5,7 @@
  * Created on 13 February 2024, 16:57
  * 
  * Fan control based on temperature
- * Using PWM at 10 Khz
+ * Using PWM at 25 Khz
  * Microchip PIC12F615, 
  * Dallas DS18B20 1-wire bus system temperature sensor
  */
@@ -45,10 +45,11 @@
 #define SET_GPIO5_LOW()                     (GPIObits.GP5       = 0)
 #define SET_OPTION_REG()                    (OPTION_REG         = 0x80)
 #define SET_INTCON()                        (INTCON             = 0xC8)
-#define SET_PR2()                           (PR2                = 0xC7)
+#define SET_PR2()                           (PR2                = 0x4F)         /* for 25Khz 0x4F, for 10khz 0xC7 */
 #define SET_CCP1CON()                       (CCP1CON            = 0xC)
-#define SET_CCPR1L()                        (CCPR1L             = 0x1E)
+#define SET_CCPR1L()                        (CCPR1L             = 0xC)          /* for 25Khz 15% 0xC, for 10khz 1E */
 #define SET_PIR1()                          (PIR1               = 0x0)
+#define SET_PORTA()                         (TRISA              = 0xC)
 
 #define MASTER_LOW()                        (GPIObits.GP4       = 0x0)
 #define MASTER_HIGH()                       (GPIObits.GP4       = 0x1)
@@ -59,7 +60,7 @@
 #define TMR1_CLEAR_FLAG_INT()               (PIR1bits.TMR1IF    = 0x0)
 #define ENABLE_TMR1_INT()                   (PIE1bits.TMR1IE    = 0x1)
 
-#define LED_Toggle()             do { GPIObits.GP5 = ~GPIObits.GP5; } while(0)
+#define LED_TOGGLE()             do { GPIObits.GP5 = ~GPIObits.GP5; } while(0)
 
                                                                                 //The below didn't work
                                                                                 //#define DELAY_RESET()            do { for(int i=0;i<960; i++); } while(0) /* delay for 480 us */
@@ -77,22 +78,32 @@
 
                                                                                 /*
                                                                                    10.4167Khz PR2=0xC7; TMR2=0x0; CCP1CON<DC1B1:DC1B0>=00 CCPR1L=01100100 0x64;
-                                                                                   15%  duty cycle CCPR1L 00011110 1Eh 30dec 0x64
+                                                                                   15%  duty cycle CCPR1L 00011110 1Eh 30dec  0x64
                                                                                    30%  duty cycle CCPR1L 00111100 3Ch 60dec  0x3C
                                                                                    45%  duty cycle CCPR1L 01011010 5Ah 90dec  0x5A
                                                                                    60%  duty cycle CCPR1L 01111000 78h 120dec 0x78
                                                                                    75%  duty cycle CCPR1L 10010110 96h 150dec 0x96
                                                                                    90%  duty cycle CCPR1L 10110100 B4h 180dec 0xB4
                                                                                    100% duty cycle CCPR1L 11001000 C8h 200dec 0xC8
+                                                                                   
+                                                                                   25khz PR2=0x4F; TMR2=0x0; CCP1CON<DC1B1:DC1B0>=00 CCPR1L=00001100 0xC;
+                                                                                   15%  duty cycle CCPR1L 00001100 Ch 30dec   0x64
+                                                                                   30%  duty cycle CCPR1L 00011000 18h 60dec  0x3C
+                                                                                   45%  duty cycle CCPR1L 00100100 2Ah 90dec  0x5A
+                                                                                   60%  duty cycle CCPR1L 00110000 30h 120dec 0x78
+                                                                                   75%  duty cycle CCPR1L 00111100 3Ch 150dec 0x96
+                                                                                   90%  duty cycle CCPR1L 01001000 48h 180dec 0xB4
+                                                                                   100% duty cycle CCPR1L 01010000 50h 200dec 0xC8
                                                                                 */
 
 unsigned char pwmSelect                 = 0;
-unsigned char pwmDutyCycle[8]           = {0x0,0x1E,0x3C,0x5A,0x78,0x96,0xB4,0xC8};
+unsigned char pwmDutyCycle[8]           = {0x0,0xC,0x18,0x24,0x30,0x3C,0x48,0x50}; /* for 10khz 0x1E,0x3C,0x5A,0x78,0x96,0xB4,0xC8 */
 unsigned char DS18B20_SKIP              = 0xCC;                                 /* 11001100 */
 unsigned char DS18B20_READ_SCRATCHPAD   = 0xBE;                                 /* 10111110 */
 unsigned char DS18B20_WRITE_SCRATCHPAD  = 0x4E;                                 /* 01001110 */
 unsigned char DS18B20_COPY              = 0x48;                                 /* 01001000 */
 unsigned char DS18B20_CONV              = 0x44;                                 /* 01000100 */
+unsigned char DS18B20_9BIT_RESOLUTION   = 0x1F;                                 /* 00011111 */
 unsigned char tmpBit                    = 0;
 unsigned char configByte                = 0;
 unsigned char tempLSB                   = 0;
@@ -171,7 +182,7 @@ void resolutionCheck(unsigned char res){
         wCommand(DS18B20_SKIP);                                                 /* Send the SKIP command we are addressing only one sensor */
         wCommand(DS18B20_WRITE_SCRATCHPAD);                                     /* Write the 3 bytes of scratchpad TH,TL,CONF */
         for(int i=0;i<3;i++){
-            wCommand(0x1F);                                                     /* send the configuration byte of 9 bit resolution 00011111 
+            wCommand(DS18B20_9BIT_RESOLUTION);                                  /* send the configuration byte of 9 bit resolution 00011111 
                                                                                  * on all bytes even TH,TL (ignore, not in use) */
         }
         sendReset();                                                            /* Send Reset plus the Presence to start communicating with DS18B20 */
@@ -193,7 +204,7 @@ void SYSTEM_Initialize(){
                                                                                  */
 
     ENABLE_DIGITAL_IO_PINS();                                                   /* disable analog enable digital pins */
-    TRISA = 0xC;                                                                /* 00001100 GP0,GP1,GP4,GP5 as OUTPUT, GP2,GP3 as INPUT
+    SET_PORTA();                                                                /* 00001100 GP0,GP1,GP4,GP5 as OUTPUT, GP2,GP3 as INPUT
                                                                                    initially you need to disable output for PWM on GP2
                                                                                    as per documentation  */
     SET_GPIO0_LOW();                                                            /* make GP0 output low */
@@ -218,9 +229,9 @@ void SYSTEM_Initialize(){
                                                                                  * GPIF 0 GPIO Change Interrupt Flag bit */
     LED_ON();                                                                   /* Led ON */
     DISABLE_CCP1_OUTPUT_DRIVE();
-    SET_PR2();                                                                  /* Load value 199 decimal for PWM freq 10KHz 0xC7  */
+    SET_PR2();                                                                  /* for 25khz Load value 0x4F, Load value 199 decimal for PWM freq 10KHz 0xC7  */
     SET_CCP1CON();                                                              /* 00001100 load duty cycle 15% DC1B<1:0> set to 0 */
-    SET_CCPR1L();                                                               /* 00011110 load value on CCPR1L for DC 15% 0x1E   */
+    SET_CCPR1L();                                                               /* for 25khz 15% 0xC, for 10khz 00011110 load value on CCPR1L for DC 15% 0x1E   */
     SET_PIR1();                                                                 /* Clear interrupt flag TMR2IF, TMR2 to PR2 Match
                                                                                  * Interrupt Flag bit(1) */
     SET_PRESCALER_1();                                                          /* Set prescaler to 1:1 */
