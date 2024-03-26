@@ -267,7 +267,7 @@ void SYSTEM_Initialize(){
 /* PWM */
 void selectPwmDutyCycle(unsigned char pos){
     
-    CCPR1L = pwmDutyCycle[pos];                                                 /* Since using a 10 Khz PWM frequency the register  
+    CCPR1L = pwmDutyCycle[pos];                                                 /* Since using a 25 Khz PWM frequency the register  
                                                                                    CCP1CON = 0xC remains with the same value (0000 1100) where the two bits are always 00 
                                                                                    bit 5-4 DC1B<1:0>: PWM Duty Cycle Least Significant bits 
                                                                                    only the CCPR1L changes between different duty cycles.
