@@ -1,7 +1,7 @@
 Fan control with Microchip PIC12F615, 1-wire BUS sensor Dallas DS18B20,
 and n-channel mosfet IRLR/U2905PbF.
 
-This is a Microchip PIC12F615 with PWM at 10 Khz acting on various duty cycles,
+This is a Microchip PIC12F615 with PWM at 25 Khz acting on various duty cycles,
 0%, 15%, 30%, 45%, 60%, 75%, 90% and 100% depending on the temperature reading 
 from 1-wire BUS Dallas DS18B20 temperature sensor.
 
