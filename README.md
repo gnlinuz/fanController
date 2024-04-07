@@ -33,5 +33,6 @@ command cycle at 500 nano seconds.
 The nmain.c file was created with MPLAB IDE v6.20, and the compiler used XC8-v2.46.
 The HEX file can be used directly to programme the 12F615.
 Programmer hardware used PICKIT 3.
+
 Gerber file included ready for pcb fabrication including the stencil.
-P2 jumpper needs to be closed when normal operation. Open the P2 jumpper when programming the pic.
+P2 jumper needs to be closed when normal operation. Open the P2 jumper when programming the pic.
